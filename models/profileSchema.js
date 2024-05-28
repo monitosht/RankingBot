@@ -6,7 +6,7 @@ const profileSchema = new mongoose.Schema({
   wins: { type: Number, default: 0 },
   losses: { type: Number, default: 0 },
   draws: { type: Number, default: 0 },
-  elo: { type: Number, default: 0 },
+  elo: { type: Number, default: 500 },
 });
 
 const model = mongoose.model("ranking database", profileSchema);
