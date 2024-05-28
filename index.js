@@ -1,9 +1,11 @@
 require("dotenv").config();
 
+const mongoose = require("mongoose");
+
 const fs = require("node:fs");
 const path = require("node:path");
 
-const { DISCORD_TOKEN: token } = process.env;
+const { DISCORD_TOKEN: token, MONGODB_SRV: database } = process.env;
 
 // Require the necessary discord.js classes
 const { Client, GatewayIntentBits, Collection } = require("discord.js");
@@ -56,5 +58,14 @@ for (const file of commandFiles) {
     );
   }
 }
+
+mongoose
+  .connect(database)
+  .then(() => {
+    console.log("Successfully connected to the database.");
+  })
+  .catch((err) => {
+    console.log(err);
+  });
 
 client.login(token);
