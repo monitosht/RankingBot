@@ -31,7 +31,7 @@ module.exports = {
 
     if (!otherProfile) {
       await interaction.editReply(
-        `The user you have challenged has not been registered into the Ranking database.`
+        `The user you are attempting to challenge has not yet registered into the Ranking database. Users can register by using the \`/profile\` command.`
       );
       return;
     }
@@ -104,6 +104,7 @@ module.exports = {
           {
             $inc: {
               wins: 1,
+              elo: eloCalculator(elo, oe, "win"),
             },
           }
         );
@@ -112,13 +113,20 @@ module.exports = {
           {
             $inc: {
               losses: 1,
+              elo: eloCalculator(elo, oe, "loss"),
             },
           }
         );
         await result.update({
           components: [],
         });
-        await interaction.followUp(`${user} wins!`);
+        await interaction.followUp(
+          `${user} wins the match and gains + ${eloCalculator(
+            elo,
+            oe,
+            "win"
+          )} Elo!\n${otherUser} losses ${eloCalculator(elo, oe, "loss")} Elo.`
+        );
       } else if (result.customId === "draw") {
         await profileModel.findOneAndUpdate(
           { userId: user.id },
@@ -148,6 +156,7 @@ module.exports = {
           {
             $inc: {
               losses: 1,
+              elo: eloCalculator(elo, oe, "loss"),
             },
           }
         );
@@ -156,16 +165,41 @@ module.exports = {
           {
             $inc: {
               wins: 1,
+              elo: eloCalculator(elo, oe, "win"),
             },
           }
         );
         await result.update({
           components: [],
         });
-        await interaction.followUp(`${otherUser} wins!`);
+        await interaction.followUp(
+          `${otherUser} wins the match and gains + ${eloCalculator(
+            elo,
+            oe,
+            "win"
+          )} Elo!\n${user} losses ${eloCalculator(elo, oe, "loss")} Elo.`
+        );
       }
     } catch (error) {
       console.log(error);
     }
   },
+};
+
+const eloCalculator = (a, b, c) => {
+  let result = a > b ? a - b : b - a;
+  let score = 0.5;
+
+  if (c === "win") {
+    score = 1;
+  } else if (c === "loss") {
+    score = 0;
+  }
+
+  result = result / 400;
+  result = Math.pow(10, result) + 1;
+  result = 1 / result;
+  result = 20 * (score - result);
+
+  return Math.round(result);
 };
